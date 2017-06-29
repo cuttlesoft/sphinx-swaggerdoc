@@ -5,20 +5,24 @@ import traceback
 from docutils.parsers.rst import Directive
 from past.builtins import basestring
 
-from sphinx.locale import _
+# from sphinx.locale import _
 
 import requests
 from requests_file import FileAdapter
 import json
 
+
 class swaggerv2doc(nodes.Admonition, nodes.Element):
     pass
+
 
 def visit_swaggerv2doc_node(self, node):
     self.visit_admonition(node)
 
+
 def depart_swaggerv2doc_node(self, node):
     self.depart_admonition(node)
+
 
 class SwaggerV2DocDirective(Directive):
 
@@ -27,11 +31,19 @@ class SwaggerV2DocDirective(Directive):
     # this enables content in the directive
     has_content = True
 
-    def processSwaggerURL(self, url):
-        s = requests.Session()
-        s.mount('file://', FileAdapter())
-        r = s.get(url)
-        return r.json()
+    def processSwaggerURL(self, path):
+        try:
+            # Adds support for relative path imports for swagger json objects
+            r = open(path, 'r').read()
+            return json.loads(r)
+        except ValueError as e:
+            # No valid JSON object decoded.
+            print e
+        except Exception:
+            s = requests.Session()
+            s.mount('file://', FileAdapter())
+            r = s.get(path)
+            return r.json()
 
     def create_item(self, key, value):
         para = nodes.paragraph()
